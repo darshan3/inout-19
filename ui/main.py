@@ -95,6 +95,10 @@ def main():
     join_text = myfont.render('JOIN', False, (255, 255, 255))
     join_color = red_color
 
+    tcr_button = pg.Rect(260, 460, 120, 20)
+    tcr_text = myfont.render('TCR', False, (255, 255, 255))
+    tcr_color = red_color
+
     all_cards = []
     for i in range(0,6):
         all_cards.append(card1)
@@ -109,7 +113,32 @@ def main():
         else:
             all_card_sprites.append(CardSprite(card, start_x + (i-3)*110, start_y + 200))
         i = i + 1
-        
+
+    all_tcr_cards = [] #max 3
+    all_tcr_card_sprites = []
+    challenge_buttons = []
+    yes_buttons = []
+    no_buttons = []
+    i = 0
+    for i in range(0,3):
+        all_tcr_cards.append(card1)
+
+    for card in all_tcr_cards:
+        all_tcr_card_sprites.append(CardSprite(card, -30 + i*110, 250))
+        i = i + 1
+    i = 0
+    for i in range(0,3):
+        challenge_buttons.append(pg.Rect(190 + i*110, 460, 100, 20))
+        yes_buttons.append(pg.Rect(190 + i*110, 440, 50, 20))
+        no_buttons.append(pg.Rect(240 + i*110, 440, 50, 20))
+
+    yes_text = myfont.render('YES', False, (255, 255, 255))
+    no_text = myfont.render('NO', False, (255, 255, 255))
+    challenge_text = myfont.render('CHALLENGE', False, (255, 255, 255))
+    challenge_color = (0,0,200)
+
+    GAS_VALUE = 2
+
     while not done:
         events = pg.event.get()
         for event in events:
@@ -171,6 +200,9 @@ def main():
                         button_color = bright_green
                         player_hash = text
                         game_state = "lobby"
+
+                    if tcr_button.collidepoint(mouse_pos):
+                        game_state = "tcr"
                 if event.type == pg.KEYDOWN:
                     if active:
                         if event.key == pg.K_RETURN:
@@ -192,8 +224,12 @@ def main():
             screen.blit(enter_hash,(input_box.x+25, input_box.y-25))
             # Blit the input_box rect.
             pg.draw.rect(screen, color, input_box, 2)
+            
             pg.draw.rect(screen, button_color, hash_button, 0)
             screen.blit(button_text, (hash_button.x + 40, hash_button.y))
+
+            pg.draw.rect(screen, tcr_color, tcr_button, 0)
+            screen.blit(tcr_text, (tcr_button.x + 40, tcr_button.y))
         if game_state == "display_cards":
             screen.fill((30, 30, 30))
             # card1_sprite.draw(screen)
@@ -279,7 +315,30 @@ def main():
             card1_sprite.draw(screen)
             card2_sprite.draw(screen)
             card3_sprite.draw(screen)
-        
+        if game_state == "tcr":
+            screen.fill((30, 30, 30))
+            for event in events:
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    mouse_pos = event.pos
+                    j = 0
+                    for button in challenge_buttons:
+                        if button.collidepoint(mouse_pos):
+                            all_tcr_card_sprites[j].highlight = not all_tcr_card_sprites[j].highlight
+                            break
+                        j = j + 1
+
+            for card_sprite in all_tcr_card_sprites:
+                card_sprite.draw(screen)
+            for button in challenge_buttons:
+                pg.draw.rect(screen, challenge_color, button, 0)
+                screen.blit(challenge_text, (button.x, button.y))
+            for button in yes_buttons:
+                pg.draw.rect(screen, bright_green, button, 0)
+                screen.blit(yes_text, (button.x, button.y))
+            for button in no_buttons:
+                pg.draw.rect(screen, red_color, button, 0)
+                screen.blit(no_text, (button.x, button.y))
+            
         pg.display.flip()
         clock.tick(30)
 

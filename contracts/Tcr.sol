@@ -9,6 +9,7 @@ pragma experimental ABIEncoderV2;
 
 import "../node_modules/openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./TradeWars.sol";
 
 contract Tcr {
 
@@ -60,8 +61,8 @@ contract Tcr {
     mapping(uint => Challenge) private challenges;
 
     // Maps listingHashes to associated listingHash data
-    mapping(bytes32 => Listing) private listings;
-    mapping(bytes32 => Card) private cards;
+    mapping(uint => Listing) private listings;
+    mapping(uint => Card) private cards;
     string[] public listingNames;
 
     // Maps polls to associated challenge
@@ -69,6 +70,7 @@ contract Tcr {
 
     // Global Variables
     ERC20 public token;
+    TradeWars public twar;
     string public name;
     uint public minDeposit;
     uint public applyStageLen;
@@ -78,10 +80,10 @@ contract Tcr {
     uint public pollNonce;
 
     // Events
-    event _Application(bytes32 indexed listingHash, uint deposit, string name, string image, uint attack, uint defence, uint price, address indexed applicant);
-    event _Challenge(bytes32 indexed listingHash, uint challengeId, address indexed challenger);
-    event _Vote(bytes32 indexed listingHash, uint challengeId, address indexed voter);
-    event _ResolveChallenge(bytes32 indexed listingHash, uint challengeId, address indexed resolver);
+    event _Application(uint indexed listingHash, uint deposit, string name, string image, uint attack, uint defence, uint price, address indexed applicant);
+    event _Challenge(uint indexed listingHash, uint challengeId, address indexed challenger);
+    event _Vote(uint indexed listingHash, uint challengeId, address indexed voter);
+    event _ResolveChallenge(uint indexed listingHash, uint challengeId, address indexed resolver);
     event _RewardClaimed(uint indexed challengeId, uint reward, address indexed voter);
 
     // using the constructor to initialize the TCR parameters
@@ -89,11 +91,14 @@ contract Tcr {
     constructor(
         string memory _name,
         address _token,
+        address _twar,
         uint[] memory _parameters
     ) public {
         require(_token != address(0), "Token address should not be 0 address.");
+        require(_twar != address(0), "Trade war address should not be 0 address.");
 
         token = ERC20(_token);
+        twar = TradeWars(_twar);
         name = _name;
 
         // minimum deposit for listing to be whitelisted
@@ -110,12 +115,12 @@ contract Tcr {
     }
 
     // returns whether a listing is already whitelisted
-    function isWhitelisted(bytes32 _listingHash) public view returns (bool whitelisted) {
+    function isWhitelisted(uint _listingHash) public view returns (bool whitelisted) {
         return listings[_listingHash].whitelisted;
     }
 
     // returns if a listing is in apply stage
-    function appWasMade(bytes32 _listingHash) public view returns (bool exists) {
+    function appWasMade(uint _listingHash) public view returns (bool exists) {
         return listings[_listingHash].applicationExpiry > 0;
     }
 
@@ -130,17 +135,17 @@ contract Tcr {
     }
 
     // get details of this registry (for UI)
-    function getDetails() public view returns (string memory, address, uint, uint, uint) {
+    function getDetails() public view returns (string memory, address, address, uint, uint, uint) {
         string memory _name = name;
-        return (_name, address(token), minDeposit, applyStageLen, commitStageLen);
+        return (_name, address(token), address(twar), minDeposit, applyStageLen, commitStageLen);
     }
 
-    function getCardDetails(bytes32 _listingHash) public view returns (string memory, string memory, uint, uint, uint) {
+    function getCardDetails(uint _listingHash) public view returns (string memory, string memory, uint, uint, uint) {
         Card memory c = cards[_listingHash];
         return(c.name, c.image, c.attack, c.defence, c.price);
     }
     // get details of a listing (for UI)
-    function getListingDetails(bytes32 _listingHash) public view returns (bool, address, uint, uint) {
+    function getListingDetails(uint _listingHash) public view returns (bool, address, uint, uint) {
         Listing memory listingIns = listings[_listingHash];
 
         // Listing must be in apply stage or already on the whitelist
@@ -149,8 +154,8 @@ contract Tcr {
     }
 
     // proposes a listing to be whitelisted
-    function propose(uint _amount, string calldata _name, string calldata _image, uint _attack, uint _defence, uint _price) external {
-        bytes32 _listingHash = keccak256(abi.encode(_name, _attack, _defence));
+    function propose(uint _amount, string calldata _name, string calldata _image, uint _attack, uint _defence, uint _price) external returns(uint){
+        uint _listingHash = uint(keccak256(abi.encode(_name, _attack, _defence)));
         require(!isWhitelisted(_listingHash), "Listing is already whitelisted.");
         require(!appWasMade(_listingHash), "Listing is already in apply stage.");
         require(_amount >= minDeposit, "Not enough stake for application.");
@@ -180,10 +185,11 @@ contract Tcr {
         require(token.transferFrom(listing.owner, address(this), _amount), "Token transfer failed.");
 
         emit _Application(_listingHash, _amount, _name, _image, _attack, _defence, _price, msg.sender);
+        return _listingHash;
     }
 
     // challenges a listing from being whitelisted
-    function challenge(bytes32 _listingHash, uint _amount)
+    function challenge(uint _listingHash, uint _amount)
         external returns (uint challengeId) {
         Listing storage listing = listings[_listingHash];
 
@@ -230,7 +236,7 @@ contract Tcr {
     // commits a vote for/against a listing
     // plcr voting is not being used here
     // to keep it simple, we just store the choice as a bool - true is for and false is against
-    function vote(bytes32 _listingHash, uint _amount, bool _choice) public {
+    function vote(uint _listingHash, uint _amount, bool _choice) public {
         Listing storage listing = listings[_listingHash];
 
         // Listing must be in apply stage or already on the whitelist
@@ -265,7 +271,7 @@ contract Tcr {
     }
 
     // check if the listing can be whitelisted
-    function canBeWhitelisted(bytes32 _listingHash) public view returns (bool) {
+    function canBeWhitelisted(uint _listingHash) public view returns (bool) {
         uint challengeId = listings[_listingHash].challengeId;
 
         // Ensures that the application was made,
@@ -284,7 +290,7 @@ contract Tcr {
     }
 
     // updates the status of a listing
-    function updateStatus(bytes32 _listingHash) public {
+    function updateStatus(uint _listingHash) public {
         if (canBeWhitelisted(_listingHash)) {
             listings[_listingHash].whitelisted = true;
         } else {
@@ -311,7 +317,7 @@ contract Tcr {
     }
 
     // resolves a challenge and calculates rewards
-    function resolveChallenge(bytes32 _listingHash) private {
+    function resolveChallenge(uint _listingHash) private {
         // Check if listing is challenged
         Listing memory listing = listings[_listingHash];
         require(listing.challengeId > 0 && !challenges[listing.challengeId].resolved, "Listing is not challenged.");
@@ -364,5 +370,19 @@ contract Tcr {
         }
 
         voteInstance.claimed = true;
+    }
+
+    function purchase(uint _listingHash, uint _amount ) public returns(uint) {
+        Listing memory listingIns = listings[_listingHash];
+        require(appWasMade(_listingHash) || listingIns.whitelisted, "Listing does not exist.");
+        require(cards[_listingHash].price > 0, "The card is already sold");
+        require(cards[_listingHash].price <= _amount, "Your purchase amount is less than the price");
+        Card storage c = cards[_listingHash];
+        require(token.transferFrom(msg.sender, listingIns.owner, _amount), "Token transfer failed.");
+        require(twar.addCard(c.name, c.image, c.attack, c.defence, msg.sender), "Card could not be sold");
+        c.price = 0;
+        // c.owner = msg.sender;
+        return uint(_listingHash);
+        
     }
 }

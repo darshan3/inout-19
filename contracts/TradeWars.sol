@@ -153,7 +153,7 @@ contract TradeWars {
         start();
     }
 
-    function addCard(string memory _name, string memory _image, uint _attack, uint _defence) public returns (uint) {
+    function addCard(string memory _name, string memory _image, uint _attack, uint _defence, address _owner) public returns (bool) {
         uint _listingHash = uint(keccak256(abi.encode(_name, _attack, _defence)));
 
         cards[_listingHash] = Card({
@@ -163,9 +163,9 @@ contract TradeWars {
             defence: _defence
         });
         
-        owner[_listingHash] = msg.sender;
+        owner[_listingHash] = _owner;
         cardIDs.push(_listingHash);
-        return _listingHash;
+        return true;
     }
 
 }

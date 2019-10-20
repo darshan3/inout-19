@@ -1,9 +1,31 @@
 var tradewars = artifacts.require("TradeWars");
+var tcr = artifacts.require("Tcr");
+async function increaseTime(duration) {
+    const id = Date.now()
+    return new Promise((resolve, reject) => {
+        web3.currentProvider.send({
+            jsonrpc: '2.0',
+            method: 'evm_increaseTime',
+            params: [duration],
+            id: id,
+        }, err1 => {
+            if (err1) return reject(err1)
 
+            web3.currentProvider.send({
+                jsonrpc: '2.0',
+                method: 'evm_mine',
+                id: id + 1,
+            }, (err2, res) => {
+                return err2 ? reject(err2) : resolve(res)
+            })
+        })
+    })
+}
 contract('TradeWars', async function (accounts) {
     let twinst;
     before(async() => {
         twinst = await tradewars.deployed();
+        tcr = await tcr.deployed();
 
         
         // assert.equal(cards.length, 3, "All cards not alloted to 1");
@@ -103,11 +125,18 @@ contract('TradeWars', async function (accounts) {
     //     const status = await twinst.status;
     //     assert.equal(status, 0, "status didnt initialize");
     // });
-    it('init', async function(){
-        // const cards2 = await twinst.getMyCards({from:accounts[1]});
-        // console.log("account 2\n" ,cards2);   
-        // assert.equal(cards2.length, 3, "All cards not alloted to 2");
-    });
+    // it('tcr', async function(){
+
+    //     let cardid = await tcr.propose.call(100, "Card3", "Im3", 300, 300, 100, {from: accounts[0]}) ;
+    //     tcr.propose(100, "Card3", "Im3", 300, 300, 100, {from: accounts[0]}) ;
+    //     console.log(cardid);
+    //     await increaseTime(60);
+    //     console.log("Time passed");
+    //     console.log(await tcr.getAllListings());
+    //     // const cards2 = await twinst.getMyCards({from:accounts[1]});
+    //     // console.log("account 2\n" ,cards2);   
+    //     // assert.equal(cards2.length, 3, "All cards not alloted to 2");
+    // });
 
     
 

@@ -408,6 +408,13 @@ def main(player):
             game_state = "waitwin"
         if game_state == "waitwin":
             pg.display.flip()
+            while(True):
+                for event in winfilter.get_new_entries():
+                    print(event)
+                    game_state = "display_cards"
+                if(game_state == "display_cards"):
+                    break
+                time.sleep(1)
             pg.draw.rect(screen, attack_color, attack_button, 0)
             screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
 

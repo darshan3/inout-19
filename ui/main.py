@@ -16,20 +16,32 @@ class  Card:
 class CardSprite(pg.sprite.Sprite):
     def __init__(self, card, x = 0, y = 0):
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.image.load(str(card.image))
-        self.image = pg.transform.scale(self.image, (100, 150))
+        
         # print(self.image)
         self.attack = card.attack
         self.defence = card.defence
         self.name = card.name
         self.x = int(x)
         self.y = int(y)
+        self.card_active = False
+        self.front_image = card.image
+        self.back_image = 'card_back.png'
+        self.played = False
 
     def draw(self, gamedisplay):
-        gamedisplay.blit(self.image, (self.x, self.y))
-        display_text(self.name, self.x + 20, self.y +10, gamedisplay)
-        display_text("Attack: " + str(self.attack), self.x + 20, self.y +100, gamedisplay)
-        display_text("Defence: " + str(self.defence), self.x + 20, self.y +110, gamedisplay)
+        if not self.played:
+            if self.card_active:
+                self.image = pg.image.load(str(self.front_image))
+                self.image = pg.transform.scale(self.image, (100, 150))
+                gamedisplay.blit(self.image, (self.x, self.y))
+                display_text(self.name, self.x + 20, self.y +10, gamedisplay)
+                display_text("Attack: " + str(self.attack), self.x + 40, self.y +100, gamedisplay)
+                display_text("Defence: " + str(self.defence), self.x + 45, self.y +120, gamedisplay)
+            else:
+                self.image = pg.image.load(str(self.back_image))
+                self.image = pg.transform.scale(self.image, (100, 150))
+                gamedisplay.blit(self.image, (self.x, self.y))
+        
 
 def main():
 
@@ -49,17 +61,29 @@ def main():
     bright_green = (0,255,0)
     player_hash = ''
 
+    red_color = (255, 0, 0)
+
     enter_hash = myfont.render('Enter player hash', False, (255, 255, 255))
     hash_button = pg.Rect(260, 230, 120, 20)
     button_text = myfont.render('Enter', False, (255, 255, 255))
 
     game_state = "get_hash"
 
-    card=Card("new", "blank.png", 10,10)
-    card1=Card("new1", "blank.png", 11,11)
-    testSprite = CardSprite(card, 300, 300)
-    testSprite1 = CardSprite(card1, 350, 300)
+    card1=Card("new", "blank.png", 10,10)
+    card2=Card("new1", "blank.png", 20,20)
+    card3 = Card("new2", "blank.png", 30, 30)
+    
+    card1_sprite = CardSprite(card1, 300, 300)
+    card2_sprite = CardSprite(card2, 190, 300)
+    card3_sprite = CardSprite(card3, 410, 300)
 
+    attack_button = pg.Rect(190, 460, 100, 20)
+    attack_text = myfont.render('ATTACK', False, (255, 255, 255))
+    attack_color = bright_green
+
+    defense_button = pg.Rect(410, 460, 100, 20)
+    defense_text = myfont.render('DEFENSE', False, (255, 255, 255))
+    defense_color = red_color
     while not done:
         events = pg.event.get()
         for event in events:
@@ -79,6 +103,8 @@ def main():
                     # Change the current color of the input box.
                     color = color_active if active else color_inactive
                     mouse_pos = event.pos
+                    pos = pg.mouse.get_pos()
+                    print(pos)
                     if hash_button.collidepoint(mouse_pos):
                         print('button was pressed at {0}'.format(mouse_pos))
                         button_color = bright_green
@@ -88,6 +114,7 @@ def main():
                     if active:
                         if event.key == pg.K_RETURN:
                             player_hash = text
+                            game_state = "display_cards"
                         elif event.key == pg.K_BACKSPACE:
                             text = text[:-1]
                         else:
@@ -108,8 +135,90 @@ def main():
             screen.blit(button_text, (hash_button.x + 40, hash_button.y))
         if game_state == "display_cards":
             screen.fill((30, 30, 30))
-            testSprite.draw(screen)
-            testSprite1.draw(screen)
+            # card1_sprite.draw(screen)
+            for events in events:
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    pos = pg.mouse.get_pos()
+                    print(pos)
+                    if card1_sprite.x < pos[0] < card1_sprite.x + 100 and card1_sprite.y < pos[1] < card1_sprite.y + 150:
+                        card1_sprite.card_active = True
+                    if card2_sprite.x < pos[0] < card2_sprite.x + 100 and card2_sprite.y < pos[1] < card2_sprite.y + 150:
+                        card2_sprite.card_active = True
+                    if card3_sprite.x < pos[0] < card3_sprite.x + 100 and card3_sprite.y < pos[1] < card3_sprite.y + 150:
+                        card3_sprite.card_active = True
+                    
+                    # if card1_sprite.card_active:
+                    #     if card1_sprite.x + 5 < pos[0] < card1_sprite.x + 80 and card1_sprite.y + 90 <= pos[1] < card1_sprite.y + 110:
+                    #         print('Attack' + str(card1_sprite.attack))
+                    #         card1_sprite.card_active = False
+                    #         card1_sprite.played = True
+                    #     if card1_sprite.x + 5 < pos[0] < card1_sprite.x + 80 and card1_sprite.y + 110 <= pos[1] <= card1_sprite.y + 130:
+                    #         print('Defense' + str(card1_sprite.defence))
+                    #         card1_sprite.card_active = False
+                    #         card1_sprite.played = True
+                    
+                    # if card2_sprite.card_active:
+                    #     if card2_sprite.x + 5 < pos[0] < card2_sprite.x + 80 and card2_sprite.y + 90 <= pos[1] < card2_sprite.y + 110:
+                    #         print('Attack' + str(card2_sprite.attack))
+                    #         card2_sprite.card_active = False
+                    #         card2_sprite.played = True
+                    #     if card2_sprite.x + 5 < pos[0] < card2_sprite.x + 80 and card2_sprite.y + 110 <= pos[1] <= card2_sprite.y + 130:
+                    #         print('Defense' + str(card2_sprite.defence))
+                    #         card2_sprite.card_active = False
+                    #         card2_sprite.played = True
+                    
+                    # if card3_sprite.card_active:
+                    #     if card3_sprite.x + 5 < pos[0] < card3_sprite.x + 80 and card3_sprite.y + 90 <= pos[1] < card3_sprite.y + 110:
+                    #         print('Attack' + str(card3_sprite.attack))
+                    #         card3_sprite.card_active = False
+                    #         card3_sprite.played = True
+                    #     if card3_sprite.x + 5 < pos[0] < card3_sprite.x + 80 and card3_sprite.y + 110 <= pos[1] <= card3_sprite.y + 130:
+                    #         print('Defense' + str(card3_sprite.defence))
+                    #         card3_sprite.card_active = False
+                    #         card3_sprite.played = True
+                    if card1_sprite.card_active:
+                        if attack_button.collidepoint(pos):
+                            print('Attack' + str(card1_sprite.attack))
+                            card1_sprite.played = True
+                            card1_sprite.card_active = False
+
+                        if defense_button.collidepoint(pos):
+                            print('Defense' + str(card1_sprite.defence))
+                            card1_sprite.played = True
+                            card1_sprite.card_active = False
+
+                    if card2_sprite.card_active:
+                        if attack_button.collidepoint(pos):
+                            print('Attack' + str(card2_sprite.attack))
+                            card2_sprite.played = True
+                            card2_sprite.card_active = False
+
+                        if defense_button.collidepoint(pos):
+                            print('Defense' + str(card2_sprite.defence))
+                            card2_sprite.played = True
+                            card2_sprite.card_active = False
+
+                    if card3_sprite.card_active:
+                        if attack_button.collidepoint(pos):
+                            print('Attack' + str(card3_sprite.attack))
+                            card3_sprite.played = True
+                            card3_sprite.card_active = False
+
+                        if defense_button.collidepoint(pos):
+                            print('Defense' + str(card3_sprite.defence))
+                            card3_sprite.played = True
+                            card3_sprite.card_active = False
+
+            pg.draw.rect(screen, attack_color, attack_button, 0)
+            screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
+
+            pg.draw.rect(screen, defense_color, defense_button, 0)
+            screen.blit(defense_text, (defense_button.x + 20, defense_button.y))
+
+            card1_sprite.draw(screen)
+            card2_sprite.draw(screen)
+            card3_sprite.draw(screen)
+        
         pg.display.flip()
         clock.tick(30)
 

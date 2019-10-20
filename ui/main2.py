@@ -2,9 +2,6 @@ import pygame as pg
 from web3 import Web3, HTTPProvider
 import json 
 import time
-import sys
-import pdb
-# import
 def display_text(msg, textx, texty, screen, text_color=(0, 0, 0), background_color=None):
     msgFont = pg.font.SysFont('Comic Sans MS', 15)
     textSurface = msgFont.render(msg, True, text_color, background_color)
@@ -22,8 +19,9 @@ class  Card:
 class CardSprite(pg.sprite.Sprite):
     def __init__(self, card, x = 0, y = 0):
         pg.sprite.Sprite.__init__(self)
-        self.card = card
+        
         # print(self.image)
+        self.card = card
         self.attack = card.attack
         self.defence = card.defence
         self.name = card.name
@@ -76,7 +74,7 @@ def get_cards(twinst, account):
     
     return card_list, card_class_list, all_card_sprites
 
-def main(player):
+def main():
 
     screen = pg.display.set_mode((640, 480))
     pg.display.set_caption('Chained')
@@ -104,15 +102,9 @@ def main(player):
     #####################################################
     w3 = Web3(HTTPProvider('http://localhost:8545'))
     print(w3.isConnected())
-    if player == "0":
-        print("0")
-        account = "0x14b6f74d70931DFF8fBc33bbAEc6608D14E70949"
-    else:
-        print("1")
-        account = "0xf98AE10Df6ea8946B02D5EA8d404971a8F614356"
+    account = "0x5275F774140e4bc39f19C9154ec8AF60d9B0a65b"
 
-
-    addr = "0xe1F73982eD697f41Ac6CDCB8421098B3dd011019"
+    addr = "0xFb7459b8eD63489f5AEeFb0468B72C244D7A168f"
     with open('TradeWars.json') as f:
         ABI = json.load(f)
     twinst = w3.eth.contract(address=addr, abi=ABI) 
@@ -148,13 +140,12 @@ def main(player):
     all_cards = []
     all_cards_class = []
     all_card_sprites = []
-    turn = 0
+    
     selected_cards = []
-    selected_card = 0
+    
     gamestatusfilter = twinst.events.GameStatus.createFilter(fromBlock="latest", argument_filters={"numPlayers":2})
     # gamestatusfilter = twinst.events.GameStatus.createFilter(fromBlock="latest")
-    turnfilter = twinst.events.Turn.createFilter(fromBlock="latest")
-    winfilter = twinst.events.Win.createFilter(fromBlock="latest")
+
     while not done:
         events = pg.event.get()
         for event in events:
@@ -177,23 +168,18 @@ def main(player):
                             card1_sprite.x = 190
                             card1_sprite.y = 300
                             card1_sprite.highlight = False
-                            card1_sprite.card_active = False
                             card2_sprite = selected_cards[1]
                             card2_sprite.x = 300
                             card2_sprite.y = 300
                             card2_sprite.highlight = False
-                            card2_sprite.card_active = False
                             card3_sprite = selected_cards[2]
                             card3_sprite.x = 410
                             card3_sprite.y = 300
-                            card3_sprite.card_active = False
                             card3_sprite.highlight = False
                             game_state = "waiting"
                             selectedcardids=[]
                             for card in selected_cards:
                                 selectedcardids.append(card.card.id)
-                            print(selectedcardids)
-                            # pdb.set_trace()
                             twinst.functions.join(selectedcardids).transact({"from": account})
                         else:
                             selected_cards = []
@@ -211,7 +197,6 @@ def main(player):
             pg.display.flip()
             while(True):
                 for event in gamestatusfilter.get_new_entries():
-                    print(event)
                     game_state = "display_cards" 
                 if (game_state == "display_cards"):
                     break
@@ -263,41 +248,18 @@ def main(player):
             pg.draw.rect(screen, button_color, hash_button, 0)
             screen.blit(button_text, (hash_button.x + 40, hash_button.y))
         if game_state == "display_cards":
-            # screen.fill((30, 30, 30))
+            screen.fill((30, 30, 30))
             # card1_sprite.draw(screen)
-            pg.display.flip()
-            while(True):
-                for event in turnfilter.get_new_entries():
-                    print(event)
-                    if(event.player == account):
-                        turn = event.turn
-                        break
-                if (event.player == account):
-                    break
-                time.sleep(1)
-
             for event in events:
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    selected_card = twinst.functions.selectCard().call({"from":account})
-                    twinst.functions.selectCard().transact({"from":account})
                     pos = pg.mouse.get_pos()
-                    print(selected_card)
-                    if(card1_sprite.card.id == selected_card):
+                    print(pos)
+                    if card1_sprite.x < pos[0] < card1_sprite.x + 100 and card1_sprite.y < pos[1] < card1_sprite.y + 150:
                         card1_sprite.card_active = True
-                    if(card2_sprite.card.id == selected_card):
+                    if card2_sprite.x < pos[0] < card2_sprite.x + 100 and card2_sprite.y < pos[1] < card2_sprite.y + 150:
                         card2_sprite.card_active = True
-                    if(card3_sprite.card.id == selected_card):
+                    if card3_sprite.x < pos[0] < card3_sprite.x + 100 and card3_sprite.y < pos[1] < card3_sprite.y + 150:
                         card3_sprite.card_active = True
-                    if(turn == 0):
-                        game_state = "attack_defence"
-                    else:
-                        game_state = "checkwin"
-                    # if card1_sprite.x < pos[0] < card1_sprite.x + 100 and card1_sprite.y < pos[1] < card1_sprite.y + 150:
-                    #     card1_sprite.card_active = True
-                    # if card2_sprite.x < pos[0] < card2_sprite.x + 100 and card2_sprite.y < pos[1] < card2_sprite.y + 150:
-                    #     card2_sprite.card_active = True
-                    # if card3_sprite.x < pos[0] < card3_sprite.x + 100 and card3_sprite.y < pos[1] < card3_sprite.y + 150:
-                    #     card3_sprite.card_active = True
                     
                     # if card1_sprite.card_active:
                     #     if card1_sprite.x + 5 < pos[0] < card1_sprite.x + 80 and card1_sprite.y + 90 <= pos[1] < card1_sprite.y + 110:
@@ -328,38 +290,38 @@ def main(player):
                     #         print('Defense' + str(card3_sprite.defence))
                     #         card3_sprite.card_active = False
                     #         card3_sprite.played = True
-                    # if card1_sprite.card_active:
-                    #     if attack_button.collidepoint(pos):
-                    #         print('Attack' + str(card1_sprite.attack))
-                    #         card1_sprite.played = True
-                    #         card1_sprite.card_active = False
+                    if card1_sprite.card_active:
+                        if attack_button.collidepoint(pos):
+                            print('Attack' + str(card1_sprite.attack))
+                            card1_sprite.played = True
+                            card1_sprite.card_active = False
 
-                    #     if defense_button.collidepoint(pos):
-                    #         print('Defense' + str(card1_sprite.defence))
-                    #         card1_sprite.played = True
-                    #         card1_sprite.card_active = False
+                        if defense_button.collidepoint(pos):
+                            print('Defense' + str(card1_sprite.defence))
+                            card1_sprite.played = True
+                            card1_sprite.card_active = False
 
-                    # if card2_sprite.card_active:
-                    #     if attack_button.collidepoint(pos):
-                    #         print('Attack' + str(card2_sprite.attack))
-                    #         card2_sprite.played = True
-                    #         card2_sprite.card_active = False
+                    if card2_sprite.card_active:
+                        if attack_button.collidepoint(pos):
+                            print('Attack' + str(card2_sprite.attack))
+                            card2_sprite.played = True
+                            card2_sprite.card_active = False
 
-                    #     if defense_button.collidepoint(pos):
-                    #         print('Defense' + str(card2_sprite.defence))
-                    #         card2_sprite.played = True
-                    #         card2_sprite.card_active = False
+                        if defense_button.collidepoint(pos):
+                            print('Defense' + str(card2_sprite.defence))
+                            card2_sprite.played = True
+                            card2_sprite.card_active = False
 
-                    # if card3_sprite.card_active:
-                    #     if attack_button.collidepoint(pos):
-                    #         print('Attack' + str(card3_sprite.attack))
-                    #         card3_sprite.played = True
-                    #         card3_sprite.card_active = False
+                    if card3_sprite.card_active:
+                        if attack_button.collidepoint(pos):
+                            print('Attack' + str(card3_sprite.attack))
+                            card3_sprite.played = True
+                            card3_sprite.card_active = False
 
-                    #     if defense_button.collidepoint(pos):
-                    #         print('Defense' + str(card3_sprite.defence))
-                    #         card3_sprite.played = True
-                    #         card3_sprite.card_active = False
+                        if defense_button.collidepoint(pos):
+                            print('Defense' + str(card3_sprite.defence))
+                            card3_sprite.played = True
+                            card3_sprite.card_active = False
 
             pg.draw.rect(screen, attack_color, attack_button, 0)
             screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
@@ -370,61 +332,12 @@ def main(player):
             card1_sprite.draw(screen)
             card2_sprite.draw(screen)
             card3_sprite.draw(screen)
-        if game_state == "attack_defence":
-            for event in events:
-                if event.type == pg.MOUSEBUTTONDOWN:
-                    pos = pg.mouse.get_pos()
-                    if attack_button.collidepoint(pos):
-                        attri = 0
-                        print('Attack')
-                    else if defense_button.collidepoint(pos):
-                        attri = 1
-                        print('Defense')
-                    if(card1_sprite.card.id == selected_card)
-                        card1_sprite.played = True
-                    if(card2_sprite.card.id == selected_card)
-                        card2_sprite.played = True
-                    if(card3_sprite.card.id == selected_card)
-                        card3_sprite.played = True
-                    game_state = "waitwin"
-                    twinst.functions.chooseAttribute(attri).transact({"from":account});
-            pg.draw.rect(screen, attack_color, attack_button, 0)
-            screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
-
-            pg.draw.rect(screen, defense_color, defense_button, 0)
-            screen.blit(defense_text, (defense_button.x + 20, defense_button.y))
-
-            card1_sprite.draw(screen)
-            card2_sprite.draw(screen)
-            card3_sprite.draw(screen)
-        if game_state == "checkwin":
-            if(card1_sprite.card.id == selected_card)
-                card1_sprite.played = True
-            if(card2_sprite.card.id == selected_card)
-                card2_sprite.played = True
-            if(card3_sprite.card.id == selected_card)
-                card3_sprite.played = True
-            twinst.functions.checkWin().transact({"from":account});
-            game_state = "waitwin"
-        if game_state == "waitwin":
-            pg.display.flip()
-            pg.draw.rect(screen, attack_color, attack_button, 0)
-            screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
-
-            pg.draw.rect(screen, defense_color, defense_button, 0)
-            screen.blit(defense_text, (defense_button.x + 20, defense_button.y))
-
-            card1_sprite.draw(screen)
-            card2_sprite.draw(screen)
-            card3_sprite.draw(screen)
+        
         pg.display.flip()
         clock.tick(30)
 
 
-
-
 if __name__ == '__main__':
     pg.init()
-    print(sys.argv[1])
-    main(sys.argv[1])
+    main()
     pg.quit()

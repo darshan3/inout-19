@@ -28,25 +28,25 @@ print(w3.isConnected())
 with open('TradeWars.json') as f:
   ABI = json.load(f)
 
-addr = "0x250227a704b35f5c1fF68b2eC9DF6759c34C438d"
+addr = "0xe1F73982eD697f41Ac6CDCB8421098B3dd011019"
 twinst = w3.eth.contract(address=addr, abi=ABI)
 
 
-account1 = "0x5077BfF06A1583Fa2214771B23d8ea59B1648847"
-account2 = "0x5dCa4D0Bfd61B09229c359fE997f5Aa6C6a67F6A"
+account1 = "0x14b6f74d70931DFF8fBc33bbAEc6608D14E70949"
+account2 = "0xf98AE10Df6ea8946B02D5EA8d404971a8F614356"
 print(w3.eth.getBalance(account1))
 print(w3.eth.getBalance(account2))
-card = twinst.functions.addCard("Card1", "Im1", 100,100).call({"from":account1})
+card = twinst.functions.addCard("Card1", "blank.png", 100,100).transact({"from":account1})
+# pdb.set_trace()
+card = twinst.functions.addCard("Card3", "blank.png", 300,300).transact({"from":account1})
 
-card = twinst.functions.addCard("Card3", "Im1", 300,300).transact({"from":account1})
+card = twinst.functions.addCard("Card5", "blank.png", 500,500).transact({"from":account1})
 
-card = twinst.functions.addCard("Card5", "Im1", 500,500).transact({"from":account1})
+card = twinst.functions.addCard("Card2", "blank.png", 200,200).transact({"from":account2})
 
-card = twinst.functions.addCard("Card2", "Im1", 200,200).transact({"from":account2})
+card = twinst.functions.addCard("Card4", "blank.png", 400,400).transact({"from":account2})
 
-card = twinst.functions.addCard("Card4", "Im1", 400,400).transact({"from":account2})
-
-card = twinst.functions.addCard("Card6", "Im1", 600,600).transact({"from":account2})
+card = twinst.functions.addCard("Card6", "blank.png", 600,600).transact({"from":account2})
 
 # twinst.functions.addCard("Card1", "Im1", 100,100).transact({"from":account1})
 # twinst.cards(card).call()

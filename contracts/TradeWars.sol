@@ -30,11 +30,16 @@ contract TradeWars {
     address currPlayer;
 
     event GameStatus(uint status, address joiningPlayer, uint numPlayers);
-    event Turn(address player);
+    event Turn(address player, uint turn);
     event Win(address winner, uint card1, uint card2);
     event GameOver();
 
     constructor() public {
+        status = 0;
+        turn = 1;
+    }
+
+    function reset() external {
         status = 0;
         turn = 1;
     }
@@ -88,7 +93,7 @@ contract TradeWars {
             emit GameOver();
         } else{
             status = 1;
-            emit Turn(currPlayer);
+            emit Turn(currPlayer, turn);
         }
     }
 
@@ -126,7 +131,7 @@ contract TradeWars {
         else
             currPlayer = player1;
         status += 1;
-        emit Turn(currPlayer);
+        emit Turn(currPlayer, turn);
 
     }
 

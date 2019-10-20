@@ -32,6 +32,7 @@ contract TradeWars {
     event GameStatus(uint status, address joiningPlayer, uint numPlayers);
     event Turn(address player);
     event Win(address winner, uint card1, uint card2);
+    event GameOver();
 
     constructor() public {
         status = 0;
@@ -81,24 +82,32 @@ contract TradeWars {
 
     function start() private {
         turn = (turn+1)%2;
-        emit Turn(currPlayer);
+        if(player1_cards.length == 0){
+            status = 0;
+            numPlayers = 0;
+            emit GameOver();
+        } else{
+            status = 1;
+            emit Turn(currPlayer);
+        }
     }
 
     function selectCard() external returns (uint) {
-        require(status == 1, "status 1");
+        require(status == 1 || status == 3 , "status 1/3");
         require(msg.sender == currPlayer, "sender should be curr player");
+        status += 1;
         if(msg.sender == player1 && player1_cards.length > 0){
             uint random_number = uint((now)%(player1_cards.length));
             player1_selected_card = player1_cards[random_number];
-            player1_cards[random_number] = player1_cards.length - 1;
+            player1_cards[random_number] = player1_cards[player1_cards.length - 1];
             delete player1_cards[player1_cards.length - 1];
             player1_cards.length--;
             return player1_selected_card;
         }
         if(msg.sender == player2 && player2_cards.length > 0){
-            uint random_number = uint((now)%(player2_cards.length));
+            uint random_number = uint((2*now)%(player2_cards.length));
             player2_selected_card = player2_cards[random_number];
-            player2_cards[random_number] = player2_cards.length - 1;
+            player2_cards[random_number] = player2_cards[player2_cards.length - 1];
             delete player2_cards[player2_cards.length - 1];
             player2_cards.length--;
             return player2_selected_card;
@@ -106,7 +115,7 @@ contract TradeWars {
     }
 
     function chooseAttribute(uint i) external {
-        require(status == 1, "status 1");
+        require(status == 2, "status 2");
         require(msg.sender == currPlayer, "sender should be curr player");
         require(turn == 0, "not your turn");
         require(i <= 1, "2 attrs");
@@ -116,12 +125,13 @@ contract TradeWars {
             currPlayer = player2;
         else
             currPlayer = player1;
+        status += 1;
         emit Turn(currPlayer);
 
     }
 
     function checkWin() external {
-        require(status == 1, "status 1");
+        require(status == 4, "status 1");
         require(turn == 1, "turn=1");
         address winner;
 
@@ -138,7 +148,6 @@ contract TradeWars {
 
         owner[player1_selected_card] = winner;
         owner[player2_selected_card] = winner;
-        
         emit Win(winner, player1_selected_card, player2_selected_card);
         currPlayer = winner;
         start();

@@ -51,7 +51,48 @@ contract('TradeWars', async function (accounts) {
         await twinst.selectCard({from: accounts[1]});
         console.log(await twinst.getCardById.call(currentCard2, {from: accounts[1]}));
 
-        await twinst.checkWin();
+        let tx = await twinst.checkWin();
+        let winner = tx.logs[0].args.winner;
+        if (winner == "0xa651DbC7C7d171511bb5b758dBf8262696E4e349")
+            winner = 0;
+        else
+            winner = 1;
+        console.log("Winner", tx.logs[0].args.winner);
+/////////////////////////////////////////////////////////////////////////////////////////////
+        currentCard1 = await twinst.selectCard.call({from: accounts[winner]});
+        await twinst.selectCard({from: accounts[winner]});
+        console.log(await twinst.getCardById.call(currentCard1, {from: accounts[winner]}));
+
+        await twinst.chooseAttribute(1, {from: accounts[winner]});
+
+        currentCard2 = await twinst.selectCard.call({from: accounts[1-winner]});
+        await twinst.selectCard({from: accounts[1 -winner]});
+        console.log(await twinst.getCardById.call(currentCard2, {from: accounts[1-winner]}));
+
+        tx = await twinst.checkWin();
+        winner = tx.logs[0].args.winner;
+        if (winner == "0xa651DbC7C7d171511bb5b758dBf8262696E4e349")
+            winner = 0;
+        else
+            winner = 1;
+//////////////////////////////////////////////////////////////////////////////////////////////
+        currentCard1 = await twinst.selectCard.call({from: accounts[winner]});
+        await twinst.selectCard({from: accounts[winner]});
+        console.log(await twinst.getCardById.call(currentCard1, {from: accounts[winner]}));
+
+        await twinst.chooseAttribute(1, {from: accounts[winner]});
+
+        currentCard2 = await twinst.selectCard.call({from: accounts[1-winner]});
+        await twinst.selectCard({from: accounts[1 -winner]});
+        console.log(await twinst.getCardById.call(currentCard2, {from: accounts[1-winner]}));
+
+        tx = await twinst.checkWin();
+        winner = tx.logs[0].args.winner;
+        if (winner == "0xa651DbC7C7d171511bb5b758dBf8262696E4e349")
+            winner = 0;
+        else
+            winner = 1;
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 
 

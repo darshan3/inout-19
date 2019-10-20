@@ -1,5 +1,6 @@
 import pygame as pg
-
+from web3 import Web3, HTTPProvider
+import json
 def display_text(msg, textx, texty, screen, text_color=(0, 0, 0), background_color=None):
     msgFont = pg.font.SysFont('Comic Sans MS', 15)
     textSurface = msgFont.render(msg, True, text_color, background_color)
@@ -8,7 +9,8 @@ def display_text(msg, textx, texty, screen, text_color=(0, 0, 0), background_col
     screen.blit(textSurface, textRect)
 
 class  Card:
-    def __init__(self, name, image, attack, defence):
+    def __init__(self, uid, name, image, attack, defence):
+        self.id = uid
         self.name = name
         self.image = image
         self.attack = attack
@@ -48,6 +50,27 @@ class CardSprite(pg.sprite.Sprite):
                 self.image = pg.transform.scale(self.image, (100, 150))
                 gamedisplay.blit(self.image, (self.x, self.y))
         
+def get_cards(twinst, account):
+    card_list = twinst.functions.getMyCards().call({"from": account})
+    card_class_list = []
+    all_card_sprites =[]
+
+    start_x = 190
+    start_y = 50
+    i = 0
+
+    for card in card_list:
+        temp = twinst.getCardById(card).call({"from": account})
+        card_class_list += Card(card, temp[0], temp[1], temp[2], temp[3])
+
+    for card in card_class_list:
+        if i < 3:
+            all_card_sprites.append(CardSprite(card, start_x + i*110, start_y))
+        else:
+            all_card_sprites.append(CardSprite(card, start_x + (i-3)*110, start_y + 200))
+        i = i + 1
+    
+    return card_list, card_class_list, all_card_sprites
 
 def main():
 
@@ -74,10 +97,20 @@ def main():
     button_text = myfont.render('Enter', False, (255, 255, 255))
 
     game_state = "get_hash"
+    #####################################################
+    w3 = Web3(HTTPProvider('http://localhost:8545'))
+    print(w3.isConnected())
+    account = "0x5077BfF06A1583Fa2214771B23d8ea59B1648847"
 
-    card1=Card("new", "blank.png", 10,10)
-    card2=Card("new1", "blank.png", 20,20)
-    card3 = Card("new2", "blank.png", 30, 30)
+    addr = "0x250227a704b35f5c1fF68b2eC9DF6759c34C438d"
+    with open('TradeWars.json') as f:
+        ABI = json.load(f)
+    twinst = w3.eth.contract(address=addr, abi=ABI) 
+    #####################################################
+
+    # card1=Card("new", "blank.png", 10,10)
+    # card2=Card("new1", "blank.png", 20,20)
+    # card3 = Card("new2", "blank.png", 30, 30)
     
     # card1_sprite = CardSprite(card1, 300, 300)
     # card2_sprite = CardSprite(card2, 190, 300)
@@ -99,10 +132,13 @@ def main():
     tcr_text = myfont.render('TCR', False, (255, 255, 255))
     tcr_color = red_color
 
+    # all_cards = []
+    # for i in range(0,6):
+    #     all_cards.append(card1)
     all_cards = []
-    for i in range(0,6):
-        all_cards.append(card1)
+    all_cards_class = []
     all_card_sprites = []
+    
     selected_cards = []
     start_x = 190
     start_y = 50
@@ -139,6 +175,9 @@ def main():
 
     GAS_VALUE = 2
 
+=======
+        
+>>>>>>> 2ec70bcc0dcb764929ac9eac961c3ed952bfb96e
     while not done:
         events = pg.event.get()
         for event in events:
@@ -200,9 +239,9 @@ def main():
                         button_color = bright_green
                         player_hash = text
                         game_state = "lobby"
-
                     if tcr_button.collidepoint(mouse_pos):
                         game_state = "tcr"
+                        all_cards, all_cards_class, all_card_sprites = get_cards(twinst, account)
                 if event.type == pg.KEYDOWN:
                     if active:
                         if event.key == pg.K_RETURN:

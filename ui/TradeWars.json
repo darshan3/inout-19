@@ -1,4 +1,4 @@
- [
+[
     {
       "constant": true,
       "inputs": [
@@ -84,6 +84,11 @@
           "indexed": false,
           "name": "player",
           "type": "address"
+        },
+        {
+          "indexed": false,
+          "name": "turn",
+          "type": "uint256"
         }
       ],
       "name": "Turn",
@@ -116,6 +121,15 @@
       "inputs": [],
       "name": "GameOver",
       "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "reset",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "constant": false,

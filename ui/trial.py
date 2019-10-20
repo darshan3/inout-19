@@ -34,6 +34,8 @@ twinst = w3.eth.contract(address=addr, abi=ABI)
 
 account1 = "0x14b6f74d70931DFF8fBc33bbAEc6608D14E70949"
 account2 = "0xf98AE10Df6ea8946B02D5EA8d404971a8F614356"
+
+# pdb.set_trace()
 print(w3.eth.getBalance(account1))
 print(w3.eth.getBalance(account2))
 card = twinst.functions.addCard("Card1", "blank.png", 100,100).transact({"from":account1})

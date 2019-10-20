@@ -151,11 +151,14 @@ def main(player):
     turn = 0
     selected_cards = []
     selected_card = 0
+
+    flag =False
     gamestatusfilter = twinst.events.GameStatus.createFilter(fromBlock="latest", argument_filters={"numPlayers":2})
     # gamestatusfilter = twinst.events.GameStatus.createFilter(fromBlock="latest")
     turnfilter = twinst.events.Turn.createFilter(fromBlock="latest")
     winfilter = twinst.events.Win.createFilter(fromBlock="latest")
     while not done:
+        # screen.fill((30,30,30))
         events = pg.event.get()
         for event in events:
             if event.type == pg.QUIT :
@@ -203,7 +206,7 @@ def main(player):
                 card_sprite.draw(screen)
             pg.draw.rect(screen, defense_color, join_button, 0)
             screen.blit(join_text, (join_button.x + 20, join_button.y))
-        if game_state == "waiting":
+        elif game_state == "waiting":
             screen.fill((30,30,30))
             pg.draw.rect(screen, wait_color, wait_button, 0)
             screen.blit(wait_text, (wait_button.x, wait_button.y))
@@ -217,7 +220,16 @@ def main(player):
                     break
                 time.sleep(1)
                 # time.sleep(10000)
-        if game_state == "get_hash":
+            pg.draw.rect(screen, attack_color, attack_button, 0)
+            screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
+
+            pg.draw.rect(screen, defense_color, defense_button, 0)
+            screen.blit(defense_text, (defense_button.x + 20, defense_button.y))
+
+            card1_sprite.draw(screen)
+            card2_sprite.draw(screen)
+            card3_sprite.draw(screen)
+        elif game_state == "get_hash":
             for event in events:
                 if event.type == pg.QUIT:
                     done = True
@@ -262,36 +274,65 @@ def main(player):
             pg.draw.rect(screen, color, input_box, 2)
             pg.draw.rect(screen, button_color, hash_button, 0)
             screen.blit(button_text, (hash_button.x + 40, hash_button.y))
-        if game_state == "display_cards":
+        elif game_state == "display_cards":
             # screen.fill((30, 30, 30))
+            pg.draw.rect(screen, attack_color, attack_button, 0)
+            screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
+
+            pg.draw.rect(screen, defense_color, defense_button, 0)
+            screen.blit(defense_text, (defense_button.x + 20, defense_button.y))
+
+            card1_sprite.draw(screen)
+            card2_sprite.draw(screen)
+            card3_sprite.draw(screen)
             # card1_sprite.draw(screen)
             pg.display.flip()
             while(True):
                 for event in turnfilter.get_new_entries():
                     print(event)
-                    if(event.player == account):
-                        turn = event.turn
+                    if(event["args"]["player"] == account):
+                        turn = int(event["args"]["turn"])
+                        flag =True
+                        print("Going out")
+                        print(flag)
                         break
-                if (event.player == account):
+                if (flag):
                     break
                 time.sleep(1)
-
+            print("waiting for click")
             for event in events:
                 if event.type == pg.MOUSEBUTTONDOWN:
                     selected_card = twinst.functions.selectCard().call({"from":account})
                     twinst.functions.selectCard().transact({"from":account})
                     pos = pg.mouse.get_pos()
+                    print(pos)
                     print(selected_card)
                     if(card1_sprite.card.id == selected_card):
+                        print("CARD 1")
                         card1_sprite.card_active = True
                     if(card2_sprite.card.id == selected_card):
+                        print("CARD 2")
                         card2_sprite.card_active = True
                     if(card3_sprite.card.id == selected_card):
+                        print("CARD 3")
                         card3_sprite.card_active = True
                     if(turn == 0):
                         game_state = "attack_defence"
+                        screen.fill((30,30,30))
                     else:
                         game_state = "checkwin"
+                        screen.fill((30,30,30))
+                        pg.draw.rect(screen, attack_color, attack_button, 0)
+                        screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
+
+                        pg.draw.rect(screen, defense_color, defense_button, 0)
+                        screen.blit(defense_text, (defense_button.x + 20, defense_button.y))
+
+                        card1_sprite.draw(screen)
+                        card2_sprite.draw(screen)
+                        card3_sprite.draw(screen)
+                        # card1_sprite.draw(screen)
+                        pg.display.flip()
                     # if card1_sprite.x < pos[0] < card1_sprite.x + 100 and card1_sprite.y < pos[1] < card1_sprite.y + 150:
                     #     card1_sprite.card_active = True
                     # if card2_sprite.x < pos[0] < card2_sprite.x + 100 and card2_sprite.y < pos[1] < card2_sprite.y + 150:
@@ -361,33 +402,26 @@ def main(player):
                     #         card3_sprite.played = True
                     #         card3_sprite.card_active = False
 
-            pg.draw.rect(screen, attack_color, attack_button, 0)
-            screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
-
-            pg.draw.rect(screen, defense_color, defense_button, 0)
-            screen.blit(defense_text, (defense_button.x + 20, defense_button.y))
-
-            card1_sprite.draw(screen)
-            card2_sprite.draw(screen)
-            card3_sprite.draw(screen)
-        if game_state == "attack_defence":
+            
+        elif game_state == "attack_defence":
             for event in events:
                 if event.type == pg.MOUSEBUTTONDOWN:
                     pos = pg.mouse.get_pos()
-                    if attack_button.collidepoint(pos):
-                        attri = 0
-                        print('Attack')
-                    else if defense_button.collidepoint(pos):
-                        attri = 1
-                        print('Defense')
-                    if(card1_sprite.card.id == selected_card)
-                        card1_sprite.played = True
-                    if(card2_sprite.card.id == selected_card)
-                        card2_sprite.played = True
-                    if(card3_sprite.card.id == selected_card)
-                        card3_sprite.played = True
-                    game_state = "waitwin"
-                    twinst.functions.chooseAttribute(attri).transact({"from":account});
+                    if attack_button.collidepoint(pos) or defense_button.collidepoint(pos):
+                        if attack_button.collidepoint(pos):
+                            attri = 0
+                            print('Attack')
+                        elif defense_button.collidepoint(pos):
+                            attri = 1
+                            print('Defense')
+                        if(card1_sprite.card.id == selected_card):
+                            card1_sprite.played = True
+                        if(card2_sprite.card.id == selected_card):
+                            card2_sprite.played = True
+                        if(card3_sprite.card.id == selected_card):
+                            card3_sprite.played = True
+                        game_state = "waitwin"
+                        twinst.functions.chooseAttribute(attri).transact({"from":account});
             pg.draw.rect(screen, attack_color, attack_button, 0)
             screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
 
@@ -397,16 +431,17 @@ def main(player):
             card1_sprite.draw(screen)
             card2_sprite.draw(screen)
             card3_sprite.draw(screen)
-        if game_state == "checkwin":
-            if(card1_sprite.card.id == selected_card)
+        elif game_state == "checkwin":
+            time.sleep(2)
+            if(card1_sprite.card.id == selected_card):
                 card1_sprite.played = True
-            if(card2_sprite.card.id == selected_card)
+            if(card2_sprite.card.id == selected_card):
                 card2_sprite.played = True
-            if(card3_sprite.card.id == selected_card)
+            if(card3_sprite.card.id == selected_card):
                 card3_sprite.played = True
             twinst.functions.checkWin().transact({"from":account});
             game_state = "waitwin"
-        if game_state == "waitwin":
+        elif game_state == "waitwin":
             pg.display.flip()
             while(True):
                 for event in winfilter.get_new_entries():
@@ -415,6 +450,8 @@ def main(player):
                 if(game_state == "display_cards"):
                     break
                 time.sleep(1)
+            flag=False
+            screen.fill((30,30,30))
             pg.draw.rect(screen, attack_color, attack_button, 0)
             screen.blit(attack_text, (attack_button.x + 20, attack_button.y))
 

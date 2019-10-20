@@ -365,6 +365,12 @@ def main():
                             all_tcr_card_sprites[j].highlight = not all_tcr_card_sprites[j].highlight
                             break
                         j = j + 1
+                    for button in yes_buttons:
+                        if button.collidepoint(mouse_pos):
+
+                    for button in no_buttons:
+                        if button.collidepoint(mouse_pos):
+                            
 
             for card_sprite in all_tcr_card_sprites:
                 card_sprite.draw(screen)
